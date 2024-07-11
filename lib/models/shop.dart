@@ -1,5 +1,7 @@
-import 'package:ecommerce/models/product.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/models/product.dart';
 
 class Shop extends ChangeNotifier {
   final List<Product> _shop = [
@@ -47,6 +49,10 @@ class Shop extends ChangeNotifier {
 
   List<Product> _cart = [];
 
+  Shop() {
+    _loadCart();
+  }
+
   List<Product> get shop => _shop;
   List<Product> get cart => _cart;
 
@@ -59,6 +65,7 @@ class Shop extends ChangeNotifier {
     } else {
       _cart.add(item);
     }
+    _saveCart();
     notifyListeners();
   }
 
@@ -69,6 +76,46 @@ class Shop extends ChangeNotifier {
     } else {
       _cart.remove(item);
     }
+    _saveCart();
     notifyListeners();
+  }
+
+  void _saveCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> cartItems =
+        _cart.map((item) => jsonEncode(item.toJson())).toList();
+    await prefs.setStringList('cart', cartItems);
+  }
+
+  void _loadCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? cartItems = prefs.getStringList('cart');
+    if (cartItems != null) {
+      _cart =
+          cartItems.map((item) => Product.fromJson(jsonDecode(item))).toList();
+    }
+    notifyListeners();
+  }
+}
+
+extension on Product {
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'price': price,
+      'description': description,
+      'imagePath': imagePath,
+      'quantity': quantity,
+    };
+  }
+
+  static Product fromJson(Map<String, dynamic> json) {
+    return Product(
+      name: json['name'],
+      price: json['price'],
+      description: json['description'],
+      imagePath: json['imagePath'],
+      quantity: json['quantity'],
+    );
   }
 }
