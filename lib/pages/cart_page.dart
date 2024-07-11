@@ -6,27 +6,6 @@ import 'package:provider/provider.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
-  void removeItemFromCart(BuildContext context, Product product) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: const Text("Remove this item to your cart?"),
-        actions: [
-          MaterialButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          MaterialButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<Shop>().removeFromCart(product);
-            },
-            child: Text('Yes'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void payButtonPressed(BuildContext context) {
     showDialog(
@@ -40,12 +19,17 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<Shop>().cart;
+
+    // Calculate the total price of items in the cart
+    double totalPrice =
+        cart.fold(0, (sum, item) => sum + item.price * item.quantity);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('Cart Page'),
+        title: const Text('Cart Page'),
       ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
@@ -53,7 +37,7 @@ class CartPage extends StatelessWidget {
           Expanded(
             child: cart.isEmpty
                 ? const Center(
-                    child: const Text("Your Cart is empty.."),
+                    child: Text("Your Cart is empty.."),
                   )
                 : ListView.builder(
                     itemCount: cart.length,
@@ -61,18 +45,58 @@ class CartPage extends StatelessWidget {
                       final item = cart[index];
                       return ListTile(
                         title: Text(item.name),
-                        subtitle: Text('\$' + item.price.toStringAsFixed(2)),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: () => removeItemFromCart(context, item),
+                        subtitle: Text('\$' +
+                            (item.price * item.quantity).toStringAsFixed(2)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove),
+                              onPressed: () =>
+                                  context.read<Shop>().removeFromCart(item),
+                            ),
+                            Text(item.quantity.toString()),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: () =>
+                                  context.read<Shop>().addToCart(item),
+                            ),
+                          ],
                         ),
                       );
                     }),
           ),
           Padding(
-            padding: const EdgeInsets.all(50.0),
-            child: MyButton(
-                onTap: () => payButtonPressed(context), child: Text("PAY NOW")),
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                // Display the total amount
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Total:",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '\$' + totalPrice.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                MyButton(
+                  onTap: () => payButtonPressed(context),
+                  child: const Text("PAY NOW"),
+                ),
+              ],
+            ),
           )
         ],
       ),

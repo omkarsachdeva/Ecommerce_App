@@ -3,9 +3,13 @@ class Product {
   final double price;
   final String description;
   final String imagePath;
-  Product(
-      {required this.name,
-      required this.price,
-      required this.description,
-      required this.imagePath});
+  int quantity;
+
+  Product({
+    required this.name,
+    required this.price,
+    required this.description,
+    required this.imagePath,
+    this.quantity = 1, // Default quantity is 1
+  });
 }

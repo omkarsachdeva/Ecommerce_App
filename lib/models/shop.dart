@@ -44,19 +44,31 @@ class Shop extends ChangeNotifier {
         description: "Innovative technology for your kitchen.",
         imagePath: 'assets/micro.png'),
   ];
+
   List<Product> _cart = [];
+
   List<Product> get shop => _shop;
   List<Product> get cart => _cart;
 
-  static get imagePath => null;
-
   void addToCart(Product item) {
-    _cart.add(item);
+    var existingItem = _cart.firstWhere((element) => element.name == item.name,
+        orElse: () =>
+            Product(name: '', price: 0, description: '', imagePath: ''));
+    if (existingItem.name.isNotEmpty) {
+      existingItem.quantity += 1;
+    } else {
+      _cart.add(item);
+    }
     notifyListeners();
   }
 
   void removeFromCart(Product item) {
-    _cart.remove(item);
+    var existingItem = _cart.firstWhere((element) => element.name == item.name);
+    if (existingItem.quantity > 1) {
+      existingItem.quantity -= 1;
+    } else {
+      _cart.remove(item);
+    }
     notifyListeners();
   }
 }
